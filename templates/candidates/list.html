@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Candidates{% endblock %}
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="topbar-title">Candidate Listings</div>
+        <div class="topbar-subtitle">All applications, sorted by skill match score</div>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="card">
+        <!-- Filters -->
+        <form method="GET" class="filters-bar">
+            <input type="text" name="search" class="form-control" style="max-width:220px"
+                   placeholder="Search name or email..." value="{{ search }}">
+            <select name="job_id" class="form-control" style="max-width:200px">
+                <option value="">All Jobs</option>
+                {% for j in jobs %}
+                <option value="{{ j.id }}" {% if job_filter == j.id|stringformat:"s" %}selected{% endif %}>{{ j.title }}</option>
+                {% endfor %}
+            </select>
+            <input type="number" name="score_min" class="form-control" style="max-width:150px"
+                   placeholder="Min score %" value="{{ score_min }}" min="0" max="100">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Filter</button>
+            {% if search or job_filter or score_min %}
+            <a href="{% url 'candidate-list' %}" class="btn btn-outline btn-sm">Clear</a>
+            {% endif %}
+        </form>
+
+        {% if applications %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Candidate</th>
+                        <th>Job Applied</th>
+                        <th>Skills</th>
+                        <th>Match Score</th>
+                        <th>Status</th>
+                        <th>Applied</th>
+                        <th>Resume</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td>
+                            {% if forloop.counter == 1 %}
+                            <span style="color:gold;font-size:18px">🥇</span>
+                            {% elif forloop.counter == 2 %}
+                            <span style="font-size:18px">🥈</span>
+                            {% elif forloop.counter == 3 %}
+                            <span style="font-size:18px">🥉</span>
+                            {% else %}
+                            <span style="color:var(--text-dim);font-weight:600">#{{ forloop.counter }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="font-weight:600">{{ app.name }}</div>
+                            <div style="font-size:11px;color:var(--text-muted)">{{ app.email }}</div>
+                            {% if app.summary %}
+                            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ app.summary }}">
+                                <i class="fas fa-robot" style="font-size:9px"></i> {{ app.summary|truncatechars:70 }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'job-detail-ui' app.job.pk %}" style="color:var(--primary-light);text-decoration:none;font-size:13px">
+                                {{ app.job.title }}
+                            </a>
+                        </td>
+                        <td>
+                            {% for skill in app.skills.all %}
+                            <span class="badge badge-skill">{{ skill.name }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <div class="score-bar">
+                                <div class="score-track">
+                                    <div class="score-fill {% if app.score >= 70 %}high{% elif app.score >= 40 %}mid{% else %}low{% endif %}"
+                                         style="width:{{ app.score }}%"></div>
+                                </div>
+                                <span class="score-text" style="color:{% if app.score >= 70 %}var(--secondary){% elif app.score >= 40 %}var(--warning){% else %}var(--danger){% endif %}">
+                                    {{ app.score }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-{{ app.status }}">{{ app.status }}</span></td>
+                        <td style="font-size:12px;color:var(--text-muted)">{{ app.applied_at|date:"M d, Y" }}</td>
+                        <td>
+                            {% if app.resume %}
+                            <a href="{{ app.resume.url }}" target="_blank" class="btn btn-outline btn-sm">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            {% else %}
+                            <span style="color:var(--text-dim);font-size:12px">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <h3>No candidates found</h3>
+            <p>Try adjusting your filters or share job apply links</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

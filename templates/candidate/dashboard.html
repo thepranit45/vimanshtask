@@ -1,0 +1,149 @@
+{% extends 'candidate/base.html' %}
+{% block title %}My Dashboard{% endblock %}
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="topbar-title">Welcome, {{ user.username }}! 👋</div>
+        <div class="topbar-subtitle">Here's your job search overview</div>
+    </div>
+    <div class="topbar-actions">
+        <a href="{% url 'candidate-portal-jobs' %}" class="btn btn-primary">
+            <i class="fas fa-search"></i> Browse Jobs
+        </a>
+    </div>
+</div>
+
+<div class="page-content">
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-briefcase"></i></div>
+            <div>
+                <div class="stat-value">{{ open_jobs.count }}</div>
+                <div class="stat-label">Open Jobs Available</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-file-alt"></i></div>
+            <div>
+                <div class="stat-value">{{ total_applied }}</div>
+                <div class="stat-label">Jobs Applied To</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-trophy"></i></div>
+            <div>
+                <div class="stat-value">{% if best_score %}{{ best_score.score }}%{% else %}—{% endif %}</div>
+                <div class="stat-label">Best Match Score</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <!-- Open Jobs -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">Open Jobs</div>
+                    <div class="card-subtitle">Latest opportunities</div>
+                </div>
+                <a href="{% url 'candidate-portal-jobs' %}" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            {% if open_jobs %}
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Job Title</th><th>Required Skills</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {% for job in open_jobs|slice:":5" %}
+                        <tr>
+                            <td style="font-weight:600">{{ job.title }}</td>
+                            <td>
+                                {% for skill in job.required_skills.all|slice:":3" %}
+                                <span class="badge badge-skill">{{ skill.name }}</span>
+                                {% endfor %}
+                                {% if job.required_skills.count > 3 %}
+                                <span style="font-size:11px;color:var(--text-dim)">+{{ job.required_skills.count|add:"-3" }} more</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'apply-public' job.pk %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-paper-plane"></i> Apply
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-briefcase"></i>
+                <h3>No open jobs</h3>
+                <p>Check back soon</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- My Applications -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">My Applications</div>
+                    <div class="card-subtitle">Your submitted applications</div>
+                </div>
+                <a href="{% url 'candidate-portal-applications' %}" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            {% if my_applications %}
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Job</th><th>Score</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for app in my_applications|slice:":5" %}
+                        <tr>
+                            <td>
+                                <div style="font-weight:500;font-size:13px">{{ app.job.title }}</div>
+                                <div style="font-size:11px;color:var(--text-muted)">{{ app.applied_at|date:"M d, Y" }}</div>
+                            </td>
+                            <td>
+                                <span style="font-weight:700;color:{% if app.score >= 70 %}var(--secondary){% elif app.score >= 40 %}var(--warning){% else %}var(--danger){% endif %}">
+                                    {{ app.score }}%
+                                </span>
+                            </td>
+                            <td><span class="badge badge-{{ app.status }}">{{ app.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-alt"></i>
+                <h3>No applications yet</h3>
+                <p>Browse jobs and apply to get started</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if my_applications %}
+    <!-- AI Summary of best application -->
+    {% with best_score as best %}
+    {% if best and best.summary %}
+    <div class="card" style="margin-top:24px;border-color:rgba(16,185,129,0.2);background:rgba(16,185,129,0.04)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.15);display:flex;align-items:center;justify-content:center;color:var(--primary-light)">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:14px">AI Analysis — Your Best Application</div>
+                <div style="font-size:12px;color:var(--text-muted)">{{ best.job.title }}</div>
+            </div>
+            <span style="margin-left:auto;font-size:22px;font-weight:800;color:{% if best.score >= 70 %}var(--secondary){% elif best.score >= 40 %}var(--warning){% else %}var(--danger){% endif %}">{{ best.score }}%</span>
+        </div>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.7">{{ best.summary }}</p>
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% endif %}
+</div>
+{% endblock %}

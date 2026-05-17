@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}{{ job.title }}{% endblock %}
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="topbar-title">{{ job.title }}</div>
+        <div class="topbar-subtitle">
+            <span class="badge badge-{{ job.status }}" style="margin-right:8px">{{ job.status }}</span>
+            {{ job.required_skills.count }} required skills · {{ applications.count }} candidates
+        </div>
+    </div>
+    <div class="topbar-actions">
+        <a href="{% url 'job-list' %}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+        <a href="{% url 'apply-public' job.pk %}" class="btn btn-primary" target="_blank">
+            <i class="fas fa-link"></i> Public Apply Link
+        </a>
+    </div>
+</div>
+
+<div class="page-content">
+    <!-- Job Info -->
+    <div class="card" style="margin-bottom:24px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+            <div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Description</div>
+                <p style="color:var(--text-muted);font-size:14px;line-height:1.6">{{ job.description|default:"No description provided." }}</p>
+            </div>
+            <div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Required Skills</div>
+                <div>
+                    {% for skill in job.required_skills.all %}
+                    <span class="badge badge-skill" style="font-size:12px;padding:4px 10px">{{ skill.name }}</span>
+                    {% empty %}
+                    <span style="color:var(--text-dim);font-size:13px">No required skills specified</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Candidates -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">Candidates <span style="color:var(--text-dim)">({{ applications.count }})</span></div>
+                <div class="card-subtitle">Sorted by skill match score</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <form method="GET" class="filters-bar" style="margin-bottom:20px">
+            <input type="text" name="search" class="form-control" style="max-width:220px" placeholder="Search by name..." value="{{ search }}">
+            <input type="number" name="score_min" class="form-control" style="max-width:160px" placeholder="Min score %" value="{{ score_min }}" min="0" max="100">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Filter</button>
+            {% if search or score_min %}
+            <a href="{% url 'job-detail-ui' job.pk %}" class="btn btn-outline btn-sm">Clear</a>
+            {% endif %}
+        </form>
+
+        {% if applications %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Candidate</th>
+                        <th>Skills</th>
+                        <th>Match Score</th>
+                        <th>Status</th>
+                        <th>Applied</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td style="color:var(--text-dim);font-weight:600">{{ forloop.counter }}</td>
+                        <td>
+                            <div style="font-weight:600">{{ app.name }}</div>
+                            <div style="font-size:11px;color:var(--text-muted)">{{ app.email }}</div>
+                            {% if app.summary %}
+                            <div style="font-size:11px;color:var(--text-dim);margin-top:4px;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ app.summary }}">
+                                {{ app.summary|truncatechars:80 }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for skill in app.skills.all %}
+                            <span class="badge badge-skill">{{ skill.name }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <div class="score-bar">
+                                <div class="score-track">
+                                    <div class="score-fill {% if app.score >= 70 %}high{% elif app.score >= 40 %}mid{% else %}low{% endif %}"
+                                         style="width:{{ app.score }}%"></div>
+                                </div>
+                                <span class="score-text" style="color:{% if app.score >= 70 %}var(--secondary){% elif app.score >= 40 %}var(--warning){% else %}var(--danger){% endif %}">
+                                    {{ app.score }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-{{ app.status }}">{{ app.status }}</span></td>
+                        <td style="font-size:12px;color:var(--text-muted)">{{ app.applied_at|date:"M d, Y" }}</td>
+                        <td>
+                            {% if app.resume %}
+                            <a href="{{ app.resume.url }}" target="_blank" class="btn btn-outline btn-sm" title="Download Resume">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <h3>No candidates yet</h3>
+            <p>Share the public apply link to receive applications</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

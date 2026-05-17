@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="topbar-title">Dashboard</div>
+        <div class="topbar-subtitle">Welcome back, {{ user.username }}! Here's your overview.</div>
+    </div>
+    <div class="topbar-actions">
+        <a href="{% url 'job-list' %}" class="btn btn-primary" id="post-job-btn">
+            <i class="fas fa-plus"></i> Post New Job
+        </a>
+    </div>
+</div>
+<div class="page-content">
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-briefcase"></i></div>
+            <div>
+                <div class="stat-value">{{ total_jobs }}</div>
+                <div class="stat-label">Total Jobs Posted</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-users"></i></div>
+            <div>
+                <div class="stat-value">{{ total_applications }}</div>
+                <div class="stat-label">Total Applications</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-chart-line"></i></div>
+            <div>
+                <div class="stat-value">{{ avg_score }}%</div>
+                <div class="stat-label">Avg Skill Match Score</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-bell"></i></div>
+            <div>
+                <div class="stat-value">{{ unread_notifications }}</div>
+                <div class="stat-label">Unread Notifications</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <!-- Recent Jobs -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">Recent Jobs</div>
+                    <div class="card-subtitle">Your latest postings</div>
+                </div>
+                <a href="{% url 'job-list' %}" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            {% if jobs %}
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Job Title</th><th>Applications</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr>
+                            <td><a href="{% url 'job-detail-ui' job.pk %}" style="color:var(--primary-light);text-decoration:none;font-weight:500">{{ job.title }}</a></td>
+                            <td><span style="font-weight:600">{{ job.app_count }}</span></td>
+                            <td><span class="badge badge-{{ job.status }}">{{ job.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-briefcase"></i>
+                <h3>No jobs yet</h3>
+                <p>Post your first job to get started</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Applications -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">Recent Applications</div>
+                    <div class="card-subtitle">Latest candidate submissions</div>
+                </div>
+                <a href="{% url 'candidate-list' %}" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            {% if recent_applications %}
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Candidate</th><th>Job</th><th>Score</th></tr></thead>
+                    <tbody>
+                        {% for app in recent_applications %}
+                        <tr>
+                            <td>
+                                <div style="font-weight:500">{{ app.name }}</div>
+                                <div style="font-size:11px;color:var(--text-muted)">{{ app.email }}</div>
+                            </td>
+                            <td style="font-size:13px;color:var(--text-muted)">{{ app.job.title }}</td>
+                            <td>
+                                <span style="font-weight:700;color:{% if app.score >= 70 %}var(--secondary){% elif app.score >= 40 %}var(--warning){% else %}var(--danger){% endif %}">
+                                    {{ app.score }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h3>No applications yet</h3>
+                <p>Share job links to receive applications</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

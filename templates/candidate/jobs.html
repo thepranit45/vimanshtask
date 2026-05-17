@@ -1,0 +1,73 @@
+{% extends 'candidate/base.html' %}
+{% block title %}Browse Jobs{% endblock %}
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="topbar-title">Browse Jobs</div>
+        <div class="topbar-subtitle">{{ jobs.count }} open position{{ jobs.count|pluralize }} available</div>
+    </div>
+</div>
+
+<div class="page-content">
+    <!-- Filters -->
+    <form method="GET" class="filters-bar" style="margin-bottom:24px">
+        <input type="text" name="search" class="form-control" style="max-width:250px"
+               placeholder="Search job title..." value="{{ search }}">
+        <input type="text" name="skill" class="form-control" style="max-width:200px"
+               placeholder="Filter by skill..." value="{{ skill_filter }}">
+        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
+        {% if search or skill_filter %}
+        <a href="{% url 'candidate-portal-jobs' %}" class="btn btn-outline btn-sm">Clear</a>
+        {% endif %}
+    </form>
+
+    {% if jobs %}
+    <div class="job-grid">
+        {% for job in jobs %}
+        <div class="job-card">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">
+                <div class="job-card-title">{{ job.title }}</div>
+                <span class="badge badge-open">Open</span>
+            </div>
+            <div class="job-card-meta">
+                <i class="fas fa-user"></i> {{ job.posted_by.username }}
+                &nbsp;·&nbsp;
+                <i class="fas fa-calendar-alt"></i> {{ job.created_at|date:"M d, Y" }}
+                &nbsp;·&nbsp;
+                <i class="fas fa-users"></i> {{ job.applications.count }} applied
+            </div>
+            {% if job.description %}
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">
+                {{ job.description|truncatechars:120 }}
+            </p>
+            {% endif %}
+            <div class="job-card-skills">
+                {% for skill in job.required_skills.all %}
+                <span class="badge badge-skill">{{ skill.name }}</span>
+                {% empty %}
+                <span style="font-size:12px;color:var(--text-dim)">No specific skills required</span>
+                {% endfor %}
+            </div>
+            <div class="job-card-actions">
+                {% if job.pk in applied_job_ids %}
+                <span class="already-applied">
+                    <i class="fas fa-check-circle"></i> Already Applied
+                </span>
+                {% else %}
+                <a href="{% url 'apply-public' job.pk %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-paper-plane"></i> Apply Now
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-briefcase"></i>
+        <h3>No jobs found</h3>
+        <p>Try adjusting your search filters</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
