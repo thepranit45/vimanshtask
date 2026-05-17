@@ -1,9 +1,11 @@
 # ATS Lite — Project Credentials & Information
 ### Vimansh Technologies Backend Internship Assignment
 
+**GitHub Repository:** https://github.com/thepranit45/vimanshtask
+
 ---
 
-## How to Run the Project
+## How to Run the Project (Local)
 
 ```bash
 # 1. Navigate to project folder
@@ -286,3 +288,86 @@ Examples:
 - [x] Django Admin panel configured
 - [x] Seed management command
 - [x] Deployment-ready (Gunicorn + Render instructions)
+
+---
+
+## Deploy on PythonAnywhere (Free Hosting)
+
+### Step 1 — Create account
+Go to https://www.pythonanywhere.com → Sign Up (free account is enough)
+
+### Step 2 — Open a Bash console
+Dashboard → **Consoles** → **New console: Bash**
+
+### Step 3 — Clone your GitHub repo
+```bash
+git clone https://github.com/thepranit45/vimanshtask.git
+cd vimanshtask
+```
+
+### Step 4 — Create a virtual environment and install packages
+```bash
+mkvirtualenv ats_env --python=python3.10
+pip install -r requirements.txt
+```
+
+### Step 5 — Set up the database
+```bash
+python manage.py migrate
+python manage.py seed_data
+```
+
+### Step 6 — Collect static files
+```bash
+python manage.py collectstatic --noinput
+```
+
+### Step 7 — Configure the Web App
+1. Go to PythonAnywhere **Dashboard → Web → Add a new web app**
+2. Choose **Manual configuration** → **Python 3.10**
+3. Set these fields:
+
+| Field | Value |
+|-------|-------|
+| Source code | `/home/<your-username>/vimanshtask` |
+| Virtualenv | `/home/<your-username>/.virtualenvs/ats_env` |
+| WSGI file | click the link to edit it |
+
+### Step 8 — Edit the WSGI file
+Replace everything in the WSGI file with:
+```python
+import sys
+import os
+
+path = '/home/<your-username>/vimanshtask'
+if path not in sys.path:
+    sys.path.insert(0, path)
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'ats_project.settings'
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+```
+> Replace `<your-username>` with your actual PythonAnywhere username
+
+### Step 9 — Update settings.py for PythonAnywhere
+In `ats_project/settings.py`, update these two lines:
+```python
+DEBUG = False
+ALLOWED_HOSTS = ['<your-username>.pythonanywhere.com', '127.0.0.1']
+```
+
+### Step 10 — Reload the web app
+Click **Reload** on the Web tab.
+Your site will be live at: `https://<your-username>.pythonanywhere.com`
+
+### Quick summary of all commands
+```bash
+git clone https://github.com/thepranit45/vimanshtask.git
+cd vimanshtask
+mkvirtualenv ats_env --python=python3.10
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_data
+python manage.py collectstatic --noinput
+```
